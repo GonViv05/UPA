@@ -7,7 +7,36 @@ sin usar ninguna librería externa ni módulos importados.
 Esta guía está pensada para alguien que **nunca programó**, así que explica
 todo paso a paso.
 
-## 1. Qué necesitás para poder ejecutarlo
+## 1. Cómo descargar el proyecto
+
+Este proyecto vive dentro de un repositorio de GitHub
+([GonViv05/Facultad](https://github.com/GonViv05/Facultad)), en la carpeta
+`TiendaUpa`. La forma más simple de descargarlo, sin instalar nada extra,
+es la siguiente:
+
+1. Entrá a <https://github.com/GonViv05/Facultad/tree/main/TiendaUpa>
+2. Arriba a la derecha, hacé clic en el botón verde **`< > Code`** (en la
+   página principal del repositorio, no dentro de la carpeta).
+3. Elegí **"Download ZIP"**.
+4. Se descarga un archivo comprimido (`Facultad-main.zip`). Hacé doble
+   clic para abrirlo y "Extraer todo" (en Windows, botón derecho sobre el
+   archivo → **Extraer todo...**) en la carpeta donde quieras guardarlo.
+5. Dentro de la carpeta extraída vas a encontrar `TiendaUpa`, con
+   `main.py` y la carpeta `data/` adentro. Con eso ya tenés todo lo
+   necesario para ejecutarlo (ver el paso 3 de esta guía).
+
+> Nota: al descargar el ZIP se trae **todo** el repositorio `Facultad`,
+> no solo `TiendaUpa`. Es normal, el resto de las carpetas corresponden a
+> otras materias/proyectos.
+
+### Alternativa para quien sepa usar git
+
+```bash
+git clone https://github.com/GonViv05/Facultad.git
+cd Facultad/TiendaUpa
+```
+
+## 2. Qué necesitás para poder ejecutarlo
 
 Tener **Python instalado** en la computadora (versión 3.8 o superior).
 
@@ -23,7 +52,7 @@ instalado. Si da error, hay que descargarlo desde
 [python.org/downloads](https://www.python.org/downloads/) e instalarlo
 (marcando la casilla "Add Python to PATH" durante la instalación).
 
-## 2. Cómo ejecutar el programa
+## 3. Cómo ejecutar el programa
 
 1. Abrí una terminal.
 2. Ubicate dentro de la carpeta `TiendaUpa` (donde está el archivo
@@ -38,7 +67,7 @@ instalado. Si da error, hay que descargarlo desde
 4. Va a aparecer un menú de texto. Se interactúa escribiendo el número de
    la opción deseada y presionando Enter.
 
-## 3. Cómo usarlo
+## 4. Cómo usarlo
 
 Al iniciar, el programa muestra tres opciones:
 
@@ -82,7 +111,7 @@ ventas), en vez del menú de compras normal.
 - Ver la lista de usuarios registrados.
 - Ver un reporte con todas las ventas realizadas por todos los clientes.
 
-## 4. Cómo guarda la información el programa
+## 5. Cómo guarda la información el programa
 
 El programa **no usa una base de datos**, guarda todo en archivos de texto
 simples dentro de la carpeta `data/`:
@@ -101,7 +130,7 @@ mano: el programa los lee y los actualiza solo.
 puede dejar de funcionar correctamente. Si eso pasa, se puede volver a
 escribir el archivo desde cero siguiendo el mismo formato.
 
-## 5. Por qué no hay librerías
+## 6. Por qué no hay librerías
 
 La consigna del trabajo pedía no usar ninguna librería (ni siquiera las
 que vienen incluidas con Python, como `json` u `os`). Por eso, en
@@ -109,7 +138,7 @@ que vienen incluidas con Python, como `json` u `os`). Por eso, en
 herramientas básicas del lenguaje (funciones, listas, diccionarios, y la
 función `open()` para leer/escribir archivos de texto).
 
-## 6. Estructura de archivos del proyecto
+## 7. Estructura de archivos del proyecto
 
 ```
 TiendaUpa/
