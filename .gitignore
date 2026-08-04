@@ -15,3 +15,6 @@ venv/
 # System files
 .DS_Store
 Thumbs.db
+
+# Documentacion solo local, no se sube al repo
+/README.md
