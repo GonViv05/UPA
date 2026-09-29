@@ -130,6 +130,36 @@ mano: el programa los lee y los actualiza solo.
 puede dejar de funcionar correctamente. Si eso pasa, se puede volver a
 escribir el archivo desde cero siguiendo el mismo formato.
 
+### Por qué `ventas.txt` no solo guarda el ID del producto
+
+Cada línea de `ventas.txt` tiene el formato `id|usuario|detalle|total`, y
+el campo `detalle` guarda, por cada producto comprado en esa venta, el
+texto `id:cantidad:precio:nombre` (varios productos se separan entre sí
+con `;`). Por ejemplo:
+
+```
+1|Gonza|5:2:26.99:Minecraft;6:2:49.99:Super Mario Odyssey|153.96
+```
+
+Podría parecer más simple guardar solo el `id` del producto y buscar el
+nombre y el precio actuales en `productos.txt` cuando hace falta
+mostrarlos (como sí se hace, por ejemplo, con el nombre de usuario de la
+venta). Pero el catálogo **cambia con el tiempo**: un administrador puede
+editar el precio o el nombre de un juego, o incluso eliminarlo. Si la
+venta no guardara su propia copia de esos datos, una compra vieja
+mostraría el precio de **hoy** en vez del precio que realmente se pagó, o
+"Producto #5" si el juego ya fue borrado del catálogo.
+
+Por eso el precio y el nombre se copian ("se congelan") dentro de la
+propia venta en el momento de comprar (ver la función `finalizar_compra`
+en `main.py`). Así el historial de compras y el reporte de ventas quedan
+fijos para siempre, tal como ocurrió la compra, sin depender de que el
+producto original siga existiendo o sin cambios en el catálogo.
+
+Las ventas guardadas antes de este cambio (que no tienen el nombre
+incluido en `detalle`) se siguen mostrando igual: el programa detecta que
+falta ese dato y busca el nombre en el catálogo actual como respaldo.
+
 ## 6. Por qué no hay librerías
 
 La consigna del trabajo pedía no usar ninguna librería (ni siquiera las

@@ -1,1 +1,2 @@
 1|admin|82026|admin
+2|Gonza|24273|cliente

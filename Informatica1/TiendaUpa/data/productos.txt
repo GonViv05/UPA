@@ -2,8 +2,8 @@
 2|God of War Ragnarok|Accion|PlayStation 5|49.99|8
 3|Elden Ring|RPG|PC|39.99|15
 4|FIFA 24|Deportes|PlayStation 5|44.99|20
-5|Minecraft|Sandbox|PC|26.99|30
-6|Super Mario Odyssey|Plataformas|Nintendo Switch|49.99|10
+5|Minecraft|Sandbox|PC|26.99|28
+6|Super Mario Odyssey|Plataformas|Nintendo Switch|49.99|8
 7|Call of Duty Modern Warfare III|Accion|Xbox Series X|54.99|6
 8|Stardew Valley|Simulacion|PC|12.99|25
 9|Celeste|Plataformas|PC|15.99|5
