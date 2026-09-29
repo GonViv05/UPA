@@ -10,30 +10,30 @@ todo paso a paso.
 ## 1. Cómo descargar el proyecto
 
 Este proyecto vive dentro de un repositorio de GitHub
-([GonViv05/Facultad](https://github.com/GonViv05/Facultad)), en la carpeta
-`TiendaUpa`. La forma más simple de descargarlo, sin instalar nada extra,
+([GonViv05/UPA](https://github.com/GonViv05/UPA)), en la carpeta
+`Informatica1/TiendaUpa`. La forma más simple de descargarlo, sin instalar nada extra,
 es la siguiente:
 
-1. Entrá a <https://github.com/GonViv05/Facultad/tree/main/TiendaUpa>
+1. Entrá a <https://github.com/GonViv05/UPA/tree/main/Informatica1/TiendaUpa>
 2. Arriba a la derecha, hacé clic en el botón verde **`< > Code`** (en la
    página principal del repositorio, no dentro de la carpeta).
 3. Elegí **"Download ZIP"**.
-4. Se descarga un archivo comprimido (`Facultad-main.zip`). Hacé doble
+4. Se descarga un archivo comprimido (`UPA-main.zip`). Hacé doble
    clic para abrirlo y "Extraer todo" (en Windows, botón derecho sobre el
    archivo → **Extraer todo...**) en la carpeta donde quieras guardarlo.
 5. Dentro de la carpeta extraída vas a encontrar `TiendaUpa`, con
    `main.py` y la carpeta `data/` adentro. Con eso ya tenés todo lo
    necesario para ejecutarlo (ver el paso 3 de esta guía).
 
-> Nota: al descargar el ZIP se trae **todo** el repositorio `Facultad`,
+> Nota: al descargar el ZIP se trae **todo** el repositorio `UPA`,
 > no solo `TiendaUpa`. Es normal, el resto de las carpetas corresponden a
 > otras materias/proyectos.
 
 ### Alternativa para quien sepa usar git
 
 ```bash
-git clone https://github.com/GonViv05/Facultad.git
-cd Facultad/TiendaUpa
+git clone https://github.com/GonViv05/UPA.git
+cd UPA/Informatica1/TiendaUpa
 ```
 
 ## 2. Qué necesitás para poder ejecutarlo
