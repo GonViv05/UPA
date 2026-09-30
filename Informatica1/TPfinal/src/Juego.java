@@ -1,13 +1,17 @@
 import java.util.Random;
 
 /**
- * Una partida completa: elegir luchador, pasillo, pelea, subir de nivel y final.
+ * Una partida completa: elegir luchador y un torneo de dos rondas
+ * (Takeshi y después la Mantis), con pasillo, pelea y subida de nivel en cada una.
  * Main crea un Juego nuevo por cada partida, así el estado de abajo arranca siempre de cero.
  */
 public class Juego {
+    public static final int PREMIO_POR_RONDA = 25; // la "bolsa" que se cobra al ganar una ronda
+
     private final Random azar = new Random(); // única fuente de azar; se le pasa a Combate
     private Luchador luchador;
-    private Sumo sumo;
+    private Sumo sumo;       // rival de la ronda 1
+    private Mantis mantis;   // rival de la ronda 2
     // Banderas: arrancan en false y pasan a true la primera vez, para que no se pueda repetir
     private boolean robo;        // ya le robó un onigiri al comerciante
     private boolean pagoAlSumo;  // ya le pagó para que se deje perder
@@ -18,16 +22,32 @@ public class Juego {
         mostrarPortada();
         luchador = elegirLuchador();
         sumo = new Sumo();
+        mantis = new Mantis();
 
-        // pasillo() no vuelve hasta que la pelea se resuelve (peleando o hablando)
-        Resultado resultado = pasillo();
-        if (resultado.esVictoria()) {
-            luchador.ganarExperiencia(sumo.getXpQueOtorga());
-            subirNivel();
-            mostrarVictoria(resultado);
-        } else {
-            mostrarDerrota();
+        // pasillo() no vuelve hasta que la pelea de esa ronda se resuelve (peleando o hablando)
+        Resultado ronda1 = pasillo(1);
+        if (!ronda1.esVictoria()) {
+            mostrarDerrota(sumo);
+            return; // perdió: la partida termina acá
         }
+        premiar(sumo);
+
+        Resultado ronda2 = pasillo(2);
+        if (!ronda2.esVictoria()) {
+            mostrarDerrota(mantis);
+            return;
+        }
+        premiar(mantis);
+        mostrarVictoria(ronda1, ronda2);
+    }
+
+    /** Después de ganar una ronda: la bolsa de plata, la experiencia y el reparto de puntos. */
+    private void premiar(Enemigo vencido) {
+        luchador.ganarMonedas(PREMIO_POR_RONDA);
+        Consola.titulo("¡Le ganaste a " + vencido.getNombre() + "!");
+        System.out.println("El organizador te tira la bolsa de la pelea: " + Consola.color("+$" + PREMIO_POR_RONDA, Consola.AMARILLO) + ".");
+        luchador.ganarExperiencia(vencido.getXpQueOtorga());
+        subirNivel();
     }
 
     private void mostrarPortada() {
@@ -63,33 +83,49 @@ public class Juego {
 
     // ---------------- Pasillo ----------------
 
-    /** Menú del pasillo. Termina cuando la pelea se resuelve (peleando o hablando). */
-    private Resultado pasillo() {
-        Consola.titulo("El pasillo de la Fosa");
-        System.out.println("Bajás a un sótano húmedo. Se escucha el rugido de la gente.");
-        System.out.println("Hay un guardia, un comerciante con un carrito y, detrás de la reja, Takeshi \"La Montaña\".");
+    /**
+     * Menú del pasillo antes de cada ronda. Termina cuando la pelea se resuelve (peleando o hablando).
+     * La opción 3 cambia según la ronda: con Takeshi se puede hablar, con la Mantis no.
+     */
+    private Resultado pasillo(int ronda) {
+        Consola.titulo("El pasillo de la Fosa - Ronda " + ronda);
+        if (ronda == 1) {
+            System.out.println("Bajás a un sótano húmedo. Se escucha el rugido de la gente.");
+            System.out.println("Hay un guardia, un comerciante con un carrito y, detrás de la reja, Takeshi \"La Montaña\".");
+        } else {
+            System.out.println("Volvés al pasillo con la bolsa en la mano. La tribuna todavía grita tu nombre.");
+            System.out.println("En una jaula al fondo, algo verde de tres metros te mira sin parpadear: la próxima rival.");
+        }
 
         // Se repite el menú hasta que algún return devuelva un Resultado
         while (true) {
             mostrarFicha();
             System.out.println("\n1) Hablar con el guardia");
             System.out.println("2) Ver el carrito del comerciante");
-            System.out.println("3) Hablar con Takeshi a través de la reja");
+            if (ronda == 1) {
+                System.out.println("3) Hablar con Takeshi a través de la reja");
+            } else {
+                System.out.println("3) Acercarte a la jaula de la mantis");
+            }
             System.out.println("4) Entrar al ring y pelear");
             int opcion = Consola.leerOpcion(1, 4);
             if (opcion == 1) {
-                guardia();
+                guardia(ronda);
             } else if (opcion == 2) {
                 comerciante();
-            } else if (opcion == 3) {
+            } else if (opcion == 3 && ronda == 1) {
                 // null significa "no se resolvió nada, seguimos en el pasillo"
                 Resultado charla = charlaConTakeshi();
                 if (charla != null) {
                     return charla;
                 }
+            } else if (opcion == 3) {
+                jaulaDeLaMantis();
             } else {
-                // Opción 4: se crea el combate y se devuelve lo que devuelva la pelea
-                return new Combate(luchador, sumo, azar).pelear();
+                // Opción 4: se crea el combate contra el rival de la ronda y se devuelve lo que devuelva la pelea.
+                // Se guarda en una variable de tipo Enemigo: Combate no necesita saber si es Sumo o Mantis
+                Enemigo rival = (ronda == 1) ? sumo : mantis;
+                return new Combate(luchador, rival, azar).pelear();
             }
         }
     }
@@ -100,7 +136,7 @@ public class Juego {
                 + " | Nv " + luchador.getNivel() + " | Vida " + luchador.getVidaMax()
                 + " | F " + luchador.getFuerza() + " A " + luchador.getAgilidad() + " C " + luchador.getCarisma()
                 + " | $" + luchador.getMonedas() + " | Arma: " + luchador.getArmaEquipada().getNombre()
-                + " | Comida: " + luchador.getComidas() + "]");
+                + " | Comida: " + luchador.getComidas() + " | Vendas: " + luchador.getVendasParaPelear() + "]");
     }
 
     /** Muestra una opción; si no se cumple el requisito, aparece marcada. */
@@ -109,8 +145,12 @@ public class Juego {
         System.out.println(numero + ") [" + atributo.getNombre() + " " + minimo + "] " + texto + marca);
     }
 
-    /** El guardia: da pistas sobre Takeshi según tus atributos. */
-    private void guardia() {
+    /** El guardia: da pistas sobre el rival de la ronda según tus atributos. */
+    private void guardia(int ronda) {
+        if (ronda == 2) {
+            guardiaRonda2();
+            return;
+        }
         Consola.titulo("El guardia");
         System.out.println("—¿Otro novato? Tu rival es Takeshi \"La Montaña\". Nadie lo movió del centro del ring.");
         System.out.println("\n1) Preguntar cómo funciona el torneo");
@@ -135,11 +175,49 @@ public class Juego {
         }
     }
 
+    /** Las pistas del guardia sobre la Mantis. Mismo esquema de requisitos que en la ronda 1. */
+    private void guardiaRonda2() {
+        Consola.titulo("El guardia");
+        System.out.println("—Así que le ganaste a Takeshi... Ahora te toca Sor Tijereta. La trajeron de un convento.");
+        System.out.println("\n1) Preguntar qué es esa cosa");
+        opcionConRequisito(2, "Convidarle un mate y preguntarle por sus costumbres", Atributo.CARISMA, 6);
+        opcionConRequisito(3, "Mirarlo fijo hasta que hable", Atributo.FUERZA, 6);
+        System.out.println("4) Volver");
+        int opcion = Consola.leerOpcion(1, 4);
+        if (opcion == 1) {
+            System.out.println("—Una mantis religiosa. Gigante. No habla, no come y es más rápida que vos. Suerte.");
+        } else if (opcion == 2 && luchador.cumple(Atributo.CARISMA, 6)) {
+            System.out.println("—Es muy devota. Si hacés que la tribuna cante, se arrodilla a rezar y se olvida de pelear.");
+            System.out.println(" Dicen que si canta tres veces, se vuelve al convento.");
+        } else if (opcion == 3 && luchador.cumple(Atributo.FUERZA, 6)) {
+            System.out.println("—Ataca dos veces seguidas, pero es flaquita: si la agarrás de lleno, siente cada golpe.");
+            System.out.println(" Y cuando abre las patas, corré: ese abrazo te parte al medio.");
+        } else if (opcion != 4) {
+            System.out.println("El guardia ni te mira.");
+        }
+        if (opcion != 4) {
+            Consola.pausa();
+        }
+    }
+
+    /** Con la mantis no se puede hablar: solo se la puede observar. */
+    private void jaulaDeLaMantis() {
+        Consola.titulo("La jaula de Sor Tijereta");
+        System.out.println("Te acercás a los barrotes y le decís algo. Sor Tijereta gira la cabeza 180 grados,");
+        System.out.println("te mira con dos ojos enormes y hace clic-clic con las pinzas. No entiende nada.");
+        if (luchador.cumple(Atributo.AGILIDAD, 6)) {
+            System.out.println("\nTe quedás mirándola un rato y notás algo: antes de atacar fuerte, abre las patas");
+            System.out.println("delanteras de par en par. Ese es el momento de esquivar.");
+        }
+        Consola.pausa();
+    }
+
     /** La tienda. Se queda en el menú hasta que el jugador elige "Volver". */
     private void comerciante() {
         // Arreglo fijo con las armas en venta: las opciones 1, 2 y 3 del menú
         Arma[] armas = { new Mazo(), new Dagas(), new Latigo() };
         int precioComida = luchador.precioCon(10);
+        int precioVenda = luchador.precioCon(10);
 
         while (true) {
             Consola.titulo("El comerciante (tenés $" + luchador.getMonedas() + ")");
@@ -150,15 +228,16 @@ public class Juego {
                         + " - $" + luchador.precioCon(a.getPrecio()) + " - " + a.getDescripcion());
             }
             System.out.println("4) Onigiri gigante - $" + precioComida);
+            System.out.println("5) Venda (cura el 30 % de tu vida en combate) - $" + precioVenda);
             // El robo solo se puede hacer una vez: después cambia el texto de la opción
             if (!robo) {
-                opcionConRequisito(5, "Manotear un onigiri cuando no mira", Atributo.AGILIDAD, 6);
+                opcionConRequisito(6, "Manotear un onigiri cuando no mira", Atributo.AGILIDAD, 6);
             } else {
-                System.out.println("5) (ya no te quita los ojos de encima)");
+                System.out.println("6) (ya no te quita los ojos de encima)");
             }
-            System.out.println("6) Volver");
+            System.out.println("7) Volver");
 
-            int opcion = Consola.leerOpcion(1, 6);
+            int opcion = Consola.leerOpcion(1, 7);
             if (opcion <= 3) {
                 comprarArma(armas[opcion - 1]); // opción 1 -> armas[0], etc.
             } else if (opcion == 4) {
@@ -169,6 +248,13 @@ public class Juego {
                     System.out.println("No te alcanza la plata.");
                 }
             } else if (opcion == 5) {
+                if (luchador.pagar(precioVenda)) {
+                    luchador.agregarVenda();
+                    System.out.println("Compraste una venda. Se suma a las " + Luchador.VENDAS_POR_PELEA + " que te dan en cada pelea.");
+                } else {
+                    System.out.println("No te alcanza la plata.");
+                }
+            } else if (opcion == 6) {
                 if (!robo && luchador.cumple(Atributo.AGILIDAD, 6)) {
                     robo = true; // bandera: ya no se puede volver a robar
                     luchador.agregarComida();
@@ -177,7 +263,7 @@ public class Juego {
                     System.out.println("No hay forma de hacerlo sin que te vea.");
                 }
             } else {
-                return; // opción 6: volver al pasillo
+                return; // opción 7: volver al pasillo
             }
         }
     }
@@ -282,20 +368,20 @@ public class Juego {
         }
     }
 
-    /** Pantalla final de victoria. El texto cambia según cómo ganó. */
-    private void mostrarVictoria(Resultado resultado) {
+    /** Pantalla final de victoria. Cuenta cómo ganó cada ronda. */
+    private void mostrarVictoria(Resultado ronda1, Resultado ronda2) {
         Consola.titulo("V I C T O R I O S O");
-        if (resultado == Resultado.NEGOCIADO) {
-            System.out.println(luchador.getNombre() + " salió del Ring de la Fosa como campeón sin tirar una sola piña.");
-        } else {
-            System.out.println(luchador.getNombre() + " salió del Ring de la Fosa como campeón, a puro golpe.");
-        }
+        System.out.println(luchador.getNombre() + " salió del Ring de la Fosa como campeón del torneo.");
+        System.out.println("  Ronda 1, Takeshi:      " + (ronda1 == Resultado.NEGOCIADO ? "sin tirar una sola piña" : "a puro golpe"));
+        System.out.println("  Ronda 2, Sor Tijereta: " + (ronda2 == Resultado.NEGOCIADO ? "la mandaste de vuelta al convento" : "a puro golpe"));
         System.out.println("Nivel " + luchador.getNivel() + " | Fuerza " + luchador.getFuerza()
                 + " | Agilidad " + luchador.getAgilidad() + " | Carisma " + luchador.getCarisma());
     }
 
-    private void mostrarDerrota() {
+    /** Pantalla de derrota: dice contra quién perdió. */
+    private void mostrarDerrota(Enemigo ganador) {
         Consola.titulo("D E R R O T A");
-        System.out.println("A " + luchador.getNombre() + " lo sacaron en camilla. La Fosa no perdona.");
+        System.out.println("A " + luchador.getNombre() + " lo sacaron en camilla después de enfrentar a " + ganador.getApodo() + ".");
+        System.out.println("La Fosa no perdona.");
     }
 }

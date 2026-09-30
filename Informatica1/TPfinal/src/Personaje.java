@@ -4,6 +4,9 @@
  * así no se repite el mismo código en las dos clases.
  */
 public abstract class Personaje {
+    /** Probabilidad de golpe crítico (daño doble), igual para el jugador y los rivales. */
+    public static final double PROB_CRITICO = 0.20;
+
     // protected: accesibles desde las subclases (Luchador, Enemigo, Sumo), no desde afuera
     protected String nombre;
     protected int vida;     // vida actual

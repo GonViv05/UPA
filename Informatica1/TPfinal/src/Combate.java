@@ -4,10 +4,11 @@ import java.util.Random;
 /**
  * Pelea por turnos. En cada turno el enemigo avisa lo que va a hacer,
  * el jugador elige una acción y después actúa el enemigo.
+ * Sirve para cualquier rival (Sumo, Mantis...) porque solo usa los métodos de Enemigo.
  */
 public class Combate {
     private final Luchador luchador;
-    // Se guarda como Enemigo y no como Sumo: así esta clase sirve para cualquier rival
+    // Se guarda como Enemigo y no como Sumo o Mantis: así esta clase sirve para cualquier rival
     private final Enemigo enemigo;
     private final Random azar; // el mismo Random de Juego: una sola fuente de azar en la partida
 
@@ -28,7 +29,7 @@ public class Combate {
             // 1) El enemigo decide ANTES que el jugador, y se lo avisa
             enemigo.elegirIntencion();
             mostrarEstado(turno);
-            System.out.println("\n>> " + enemigo.describirIntencion());
+            System.out.println("\n" + Consola.color(">> " + enemigo.describirIntencion(), Consola.NEGRITA));
 
             // 2) Turno del jugador
             boolean esquiva = false;     // ¿eligió esquivar este turno?
@@ -37,10 +38,12 @@ public class Combate {
             // no gasta el turno: el menú se repite hasta que haga una acción válida
             while (!turnoUsado) {
                 mostrarMenu();
-                int opcion = Consola.leerOpcion(1, 4);
+                int opcion = Consola.leerOpcion(1, 6);
+                System.out.println();
                 if (opcion == 1) {
-                    // Polimorfismo: no importa qué arma sea, cada una sabe cómo golpear
-                    System.out.println(luchador.getArmaEquipada().golpear(luchador, enemigo, azar));
+                    // Polimorfismo: no importa qué arma sea, cada una sabe cómo golpear.
+                    // usar() se encarga de la esquiva del rival y del crítico
+                    System.out.println(luchador.getArmaEquipada().usar(luchador, enemigo, azar));
                     turnoUsado = true;
                 } else if (opcion == 2) {
                     if (!luchador.puedeEsquivar()) {
@@ -50,26 +53,35 @@ public class Combate {
                         // Todavía no se sabe si esquiva: se decide en el turno del enemigo
                         esquiva = true;
                         turnoUsado = true;
-                        System.out.println("Te preparás para esquivar...");
+                        System.out.println("Flexionás las rodillas y clavás la vista en " + enemigo.getNombre() + ", listo para esquivar...");
                     }
                 } else if (opcion == 3) {
+                    turnoUsado = vendarse();
+                } else if (opcion == 4) {
+                    // Cada rival reacciona distinto a la tribuna (polimorfismo otra vez)
+                    System.out.println(enemigo.reaccionarArenga(luchador, azar));
+                    turnoUsado = true;
+                } else if (opcion == 5) {
                     if (!luchador.usarComida()) {
                         System.out.println("No tenés comida.");
-                    } else if (enemigo.aceptaComida() && azar.nextDouble() < luchador.probabilidadConvencer()) {
-                        // Aceptó la comida: la pelea termina en el acto
-                        System.out.println("Takeshi agarra el onigiri, lo mira... y se sienta a comer. ¡Trato hecho!");
-                        return Resultado.NEGOCIADO;
                     } else {
-                        System.out.println("Takeshi tira el onigiri al piso. No te cree nada.");
+                        boolean acepta = enemigo.aceptaComida() && azar.nextDouble() < luchador.probabilidadConvencer();
+                        System.out.println(enemigo.reaccionarComida(acepta, azar));
+                        if (acepta) {
+                            return Resultado.NEGOCIADO; // aceptó la comida: la pelea termina en el acto
+                        }
                         turnoUsado = true;
                     }
                 } else {
                     cambiarArma(); // no gasta el turno
                 }
             }
-            // Si el golpe del jugador lo dejó en 0, gana antes de que el enemigo llegue a atacar
+            // Si el jugador lo dejó en 0, o lo convenció de irse, gana antes de que el enemigo ataque
             if (!enemigo.estaVivo()) {
                 return Resultado.GANADO;
+            }
+            if (enemigo.abandonoLaPelea()) {
+                return Resultado.NEGOCIADO;
             }
 
             // 3) Turno del enemigo. Se le pasa "esquiva" para que sepa si el jugador intenta esquivar
@@ -81,7 +93,7 @@ public class Combate {
             // 5) Sangrado de las dagas, al final del turno
             int sangrado = enemigo.aplicarSangrado();
             if (sangrado > 0) {
-                System.out.println("Takeshi sangra: -" + sangrado);
+                System.out.println("Los cortes de " + enemigo.getNombre() + " siguen sangrando: -" + sangrado);
             }
 
             // 6) ¿Terminó? Primero el enemigo (pudo morir por el sangrado) y después el jugador
@@ -95,28 +107,44 @@ public class Combate {
         }
     }
 
+    /** Intenta vendarse. Devuelve true si gastó el turno. */
+    private boolean vendarse() {
+        if (luchador.getVendas() == 0) {
+            System.out.println("No te quedan vendas.");
+            return false;
+        }
+        if (luchador.getVida() == luchador.getVidaMax()) {
+            System.out.println("Estás entero: no hace falta vendarte.");
+            return false;
+        }
+        int cura = luchador.curar();
+        System.out.println("Retrocedés un paso, te ajustás una venda sobre la herida y respirás hondo: "
+                + Consola.color("+" + cura + " de vida", Consola.VERDE) + ".");
+        return true;
+    }
+
     /** Número de turno y las barras de vida y aguante. */
     private void mostrarEstado(int turno) {
         System.out.println("\n----------------- Turno " + turno + " -----------------");
         // printf con %-12s: el texto ocupa siempre 12 lugares (alineado a la izquierda),
         // así las barras quedan una debajo de la otra. %n es el salto de línea
-        System.out.printf("%-12s Vida    %s%n", luchador.getNombre(), Consola.barra(luchador.getVida(), luchador.getVidaMax(), 20));
-        System.out.printf("%-12s Aguante %s%n", "", Consola.barra(luchador.getAguante(), Luchador.AGUANTE_MAX, 20));
-        // instanceof pregunta si el enemigo es un Sumo; recién ahí se puede castear (Sumo) y
-        // usar estaEnfurecido(), que solo existe en Sumo
-        String furia = (enemigo instanceof Sumo && ((Sumo) enemigo).estaEnfurecido()) ? "  ¡FURIOSO!" : "";
-        System.out.printf("%-12s Vida    %s%s%n", enemigo.getNombre(), Consola.barra(enemigo.getVida(), enemigo.getVidaMax(), 20), furia);
+        System.out.printf("%-12s Vida    %s%n", luchador.getNombre(), Consola.barraVida(luchador.getVida(), luchador.getVidaMax(), 20));
+        System.out.printf("%-12s Aguante %s%n", "", Consola.color(Consola.barra(luchador.getAguante(), Luchador.AGUANTE_MAX, 20), Consola.CIAN));
+        // estadoExtra() lo decide cada rival: "¡FURIOSO!" en Takeshi, el fervor en la Mantis
+        System.out.printf("%-12s Vida    %s%s%n", enemigo.getNombre(), Consola.barraVida(enemigo.getVida(), enemigo.getVidaMax(), 20), enemigo.estadoExtra());
     }
 
-    /** Las 4 acciones del jugador. */
+    /** Las 6 acciones del jugador. */
     private void mostrarMenu() {
         System.out.println();
         System.out.println("1) Atacar con " + luchador.getArmaEquipada().getNombre()
                 + " (" + luchador.getArmaEquipada().getDescripcion() + ")");
         System.out.println("2) Esquivar (gasta " + Luchador.COSTO_ESQUIVA + " de aguante)"
                 + (luchador.puedeEsquivar() ? "" : "  -- sin aire"));
-        System.out.println("3) Ofrecer comida (tenés " + luchador.getComidas() + ")");
-        System.out.println("4) Cambiar de arma (no gasta el turno)");
+        System.out.println("3) Vendarse (cura el 30 % de tu vida, te quedan " + luchador.getVendas() + ")");
+        System.out.println("4) Arengar a la tribuna");
+        System.out.println("5) Ofrecer comida (tenés " + luchador.getComidas() + ")");
+        System.out.println("6) Cambiar de arma (no gasta el turno)");
     }
 
     /** Muestra solo las armas que el luchador puede usar y equipa la elegida. */

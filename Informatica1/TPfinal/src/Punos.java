@@ -9,10 +9,19 @@ public class Punos extends Arma {
     }
 
     @Override
-    public String golpear(Luchador atacante, Enemigo objetivo, Random azar) {
+    public String golpear(Luchador atacante, Enemigo objetivo, Random azar, boolean critico) {
         // División entera: con fuerza 3, 3 / 2 da 1 (se descartan los decimales)
         int danio = 4 + atacante.getFuerza() / 2;
+        if (critico) {
+            danio *= 2;
+        }
         objetivo.recibirDanio(danio);
-        return "Le das un puñetazo: -" + danio;
+        String rival = objetivo.getNombre();
+        String[] frases = {
+            "Le metés un gancho a la mandíbula a " + rival,
+            "Un directo seco al estómago de " + rival + ", con todo el hombro atrás",
+            "Le das un codazo a " + rival + " que el árbitro prefiere no ver"
+        };
+        return Consola.alAzar(frases, azar) + ": -" + danio;
     }
 }

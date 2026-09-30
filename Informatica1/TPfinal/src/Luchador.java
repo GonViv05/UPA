@@ -8,6 +8,7 @@ public class Luchador extends Personaje {
     // Constantes (static final): son iguales para todos los luchadores y no cambian nunca
     public static final int AGUANTE_MAX = 100;
     public static final int COSTO_ESQUIVA = 30;
+    public static final int VENDAS_POR_PELEA = 2; // vendas gratis que se reponen en cada pelea
 
     private final TipoLuchador tipo;
     private int nivel = 1;
@@ -15,6 +16,8 @@ public class Luchador extends Personaje {
     private int puntosLibres = 0; // puntos para repartir al subir de nivel
     private int monedas = 30;     // plata inicial
     private int comidas = 0;      // cantidad de onigiris
+    private int vendasDePelea = 0;   // las gratis de la pelea actual
+    private int vendasCompradas = 0; // las compradas: se guardan entre peleas
     private int aguante = AGUANTE_MAX;
     // ArrayList y no un arreglo, porque la cantidad de armas crece al comprar
     private final ArrayList<Arma> armas = new ArrayList<>();
@@ -84,6 +87,11 @@ public class Luchador extends Personaje {
     }
 
     /** Cobra la cantidad si le alcanza. Si no, devuelve false y no le saca nada. */
+    /** Plata que se gana, por ejemplo la bolsa por ganar una ronda. */
+    public void ganarMonedas(int cantidad) {
+        monedas += cantidad;
+    }
+
     public boolean pagar(int cantidad) {
         if (monedas < cantidad) {
             return false;
@@ -131,6 +139,36 @@ public class Luchador extends Personaje {
         return true;
     }
 
+    public void agregarVenda() {
+        vendasCompradas++;
+    }
+
+    /** Vendas con las que va a entrar a la próxima pelea: las gratis más las compradas. */
+    public int getVendasParaPelear() {
+        return VENDAS_POR_PELEA + vendasCompradas;
+    }
+
+    /** Todas las vendas que puede usar ahora, en medio de la pelea: las gratis que quedan más las compradas. */
+    public int getVendas() {
+        return vendasDePelea + vendasCompradas;
+    }
+
+    /**
+     * Se venda la herida: recupera el 30 % de la vida máxima, sin pasarse del máximo.
+     * Gasta primero las vendas gratis (que igual se pierden al terminar la pelea)
+     * y después las compradas. Devuelve cuánta vida recuperó.
+     */
+    public int curar() {
+        if (vendasDePelea > 0) {
+            vendasDePelea--;
+        } else {
+            vendasCompradas--;
+        }
+        int cura = Math.min((int) Math.round(vidaMax * 0.3), vidaMax - vida);
+        vida += cura;
+        return cura;
+    }
+
     /** 12 % por punto de carisma, 100 % desde carisma 8. */
     public double probabilidadConvencer() {
         return carisma >= 8 ? 1.0 : carisma * 0.12;
@@ -138,10 +176,11 @@ public class Luchador extends Personaje {
 
     // ---------- Combate ----------
 
-    /** Antes de cada pelea: vida y aguante al máximo. */
+    /** Antes de cada pelea: vida y aguante al máximo, y se reponen las vendas gratis. */
     public void prepararParaCombate() {
         vida = vidaMax;
         aguante = AGUANTE_MAX;
+        vendasDePelea = VENDAS_POR_PELEA;
     }
 
     public boolean puedeEsquivar() {
@@ -154,7 +193,12 @@ public class Luchador extends Personaje {
 
     /** Si no esquivó en este turno, recupera aliento (más rápido con agilidad). */
     public void recuperarAguante() {
-        aguante = Math.min(AGUANTE_MAX, aguante + 10 + agilidad); // Math.min evita pasarse de 100
+        sumarAguante(10 + agilidad);
+    }
+
+    /** Suma aguante sin pasarse del máximo. */
+    public void sumarAguante(int cantidad) {
+        aguante = Math.min(AGUANTE_MAX, aguante + cantidad); // Math.min evita pasarse de 100
     }
 
     /** Probabilidad de esquivar un ataque: base del ataque + 5 % por punto de agilidad (máx. 95 %). */

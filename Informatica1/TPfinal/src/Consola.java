@@ -1,3 +1,4 @@
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -9,6 +10,36 @@ public class Consola {
     // Un solo Scanner para todo el programa. Si se crearan varios sobre System.in,
     // podrían "robarse" líneas entre ellos.
     private static final Scanner teclado = new Scanner(System.in);
+
+    // Códigos ANSI: secuencias especiales que la terminal interpreta como "cambiá el color".
+    // \u001B es el carácter ESC; RESET vuelve al color normal.
+    public static final String RESET = "\u001B[0m";
+    public static final String NEGRITA = "\u001B[1m";
+    public static final String ROJO = "\u001B[31m";
+    public static final String VERDE = "\u001B[32m";
+    public static final String AMARILLO = "\u001B[33m";
+    public static final String CIAN = "\u001B[36m";
+
+    // Se apaga con "--sin-color" para terminales que no entienden los códigos ANSI
+    private static boolean colores = true;
+
+    public static void desactivarColores() {
+        colores = false;
+    }
+
+    /** Pinta el texto con el color pedido (o lo deja igual si los colores están apagados). */
+    public static String color(String texto, String codigo) {
+        if (!colores) {
+            return texto;
+        }
+        return codigo + texto + RESET;
+    }
+
+    /** Elige una frase al azar de la lista, para que los textos no se repitan siempre iguales. */
+    public static String alAzar(String[] opciones, Random azar) {
+        // nextInt(n) da un número entre 0 y n-1: justo un índice válido del arreglo
+        return opciones[azar.nextInt(opciones.length)];
+    }
 
     /** Pide un número entre min y max hasta que el usuario escriba uno válido. */
     public static int leerOpcion(int min, int max) {
@@ -68,5 +99,20 @@ public class Consola {
         // El (double) evita la división entera (70 / 140 daría 0 en vez de 0.5)
         int llenos = (int) Math.round((double) valor / maximo * ancho);
         return "[" + "#".repeat(llenos) + "-".repeat(ancho - llenos) + "] " + valor + "/" + maximo;
+    }
+
+    /** Barra de vida con color: verde, amarilla con 60 % o menos y roja con 30 % o menos. */
+    public static String barraVida(int valor, int maximo, int ancho) {
+        // Se multiplica en vez de dividir para comparar porcentajes sin decimales:
+        // "valor / maximo <= 30 %" es lo mismo que "valor * 100 <= maximo * 30"
+        String codigo;
+        if (valor * 100 <= maximo * 30) {
+            codigo = ROJO;
+        } else if (valor * 100 <= maximo * 60) {
+            codigo = AMARILLO;
+        } else {
+            codigo = VERDE;
+        }
+        return color(barra(valor, maximo, ancho), codigo);
     }
 }

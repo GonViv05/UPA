@@ -21,11 +21,29 @@ public abstract class Arma {
     }
 
     /**
+     * Lo que pasa al atacar, igual para todas las armas:
+     * primero el rival puede esquivar, después se tira el crítico y recién ahí golpea.
+     * Así esa lógica común está en un solo lugar y cada arma solo escribe su golpe.
+     */
+    public String usar(Luchador atacante, Enemigo objetivo, Random azar) {
+        if (azar.nextDouble() < objetivo.probabilidadEvadir()) {
+            return objetivo.textoEvasion(azar);
+        }
+        boolean critico = azar.nextDouble() < Personaje.PROB_CRITICO;
+        String texto = golpear(atacante, objetivo, azar, critico);
+        if (critico) {
+            texto = Consola.color("¡CRÍTICO! ", Consola.AMARILLO + Consola.NEGRITA) + texto;
+        }
+        return texto;
+    }
+
+    /**
      * Golpea al enemigo y devuelve qué pasó, para mostrarlo.
      * Es abstracto: no tiene cuerpo acá y cada subclase está obligada a escribirlo.
+     * Si critico es true, el arma tiene que hacer el doble de daño.
      * Devuelve un String en vez de imprimir, así el arma no depende de cómo se muestra el texto.
      */
-    public abstract String golpear(Luchador atacante, Enemigo objetivo, Random azar);
+    public abstract String golpear(Luchador atacante, Enemigo objetivo, Random azar, boolean critico);
 
     /** Texto del requisito, por ejemplo "[Fuerza 6]" (vacío si no tiene). */
     public String textoRequisito() {

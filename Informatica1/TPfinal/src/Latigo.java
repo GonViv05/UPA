@@ -8,11 +8,20 @@ public class Latigo extends Arma {
     }
 
     @Override
-    public String golpear(Luchador atacante, Enemigo objetivo, Random azar) {
+    public String golpear(Luchador atacante, Enemigo objetivo, Random azar, boolean critico) {
         // Escala con el carisma (el látigo es el arma "de show"): con carisma 8 son 6 + 2 = 8
         int danio = 6 + atacante.getCarisma() / 3;
+        if (critico) {
+            danio *= 2;
+        }
         objetivo.recibirDanio(danio);
         objetivo.enredar(); // el 50 % se tira después, cuando el enemigo intente atacar
-        return "¡Latigazo! -" + danio + ". Le enredás las piernas.";
+        String rival = objetivo.getNombre();
+        String[] frases = {
+            "El látigo restalla y se enrosca en los tobillos de " + rival,
+            "Hacés un giro para la tribuna y el látigo le azota la espalda a " + rival,
+            "Un chasquido que hace gritar al público: el látigo atrapa las piernas de " + rival
+        };
+        return Consola.alAzar(frases, azar) + ": -" + danio + ".";
     }
 }

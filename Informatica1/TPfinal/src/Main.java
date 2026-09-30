@@ -5,6 +5,13 @@
  */
 public class Main {
     public static void main(String[] args) {
+        // "java -cp out Main --sin-color" apaga los colores (para terminales que no los muestran bien)
+        for (String arg : args) {
+            if (arg.equals("--sin-color")) {
+                Consola.desactivarColores();
+            }
+        }
+
         boolean seguir = true;
         while (seguir) {
             // Cada vuelta crea un Juego nuevo: así todo (luchador, plata, sumo) arranca de cero
