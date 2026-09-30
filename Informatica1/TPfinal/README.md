@@ -3,7 +3,7 @@
 Guía completa, paso a paso y sin dar nada por sabido, de la versión de consola del TP Final de Informática I. Explica **cómo ejecutar el juego**, **cómo se juega** y, sobre todo, **cómo funciona el código por dentro**.
 
 > Si solo querés jugar, leé las secciones 1 a 4. Si querés entender el código (por ejemplo, para defender el TP), seguí con la 5 en adelante.
-,, 
+> 
 ## Índice
 
 1. [¿Qué es esto?](#1-qué-es-esto)
