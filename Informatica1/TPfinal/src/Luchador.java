@@ -22,6 +22,8 @@ public class Luchador extends Personaje {
     // ArrayList y no un arreglo, porque la cantidad de armas crece al comprar
     private final ArrayList<Arma> armas = new ArrayList<>();
     private Arma armaEquipada;
+    // Bandera del final pacifista: pasa a true si alguna vez atacó o amenazó, y ya no vuelve a false
+    private boolean usoLaViolencia;
 
     public Luchador(String nombre, TipoLuchador tipo) {
         // super(...) llama al constructor de Personaje. La vida máxima depende de la fuerza:
@@ -205,6 +207,16 @@ public class Luchador extends Personaje {
     public double probabilidadEsquivar(double base) {
         // El tope de 95 % hace que esquivar nunca sea 100 % seguro
         return Math.min(0.95, base + agilidad * 0.05);
+    }
+
+    /** Lo llaman Combate (al elegir "Atacar") y Juego (al amenazar a Takeshi). Sin esto no hay final pacifista. */
+    public void marcarViolencia() {
+        usoLaViolencia = true;
+    }
+
+    /** true si en algún momento de la partida atacó o amenazó. */
+    public boolean usoLaViolencia() {
+        return usoLaViolencia;
     }
 
     public TipoLuchador getTipo() { return tipo; }

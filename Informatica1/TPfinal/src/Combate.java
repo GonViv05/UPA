@@ -43,6 +43,7 @@ public class Combate {
                 if (opcion == 1) {
                     // Polimorfismo: no importa qué arma sea, cada una sabe cómo golpear.
                     // usar() se encarga de la esquiva del rival y del crítico
+                    luchador.marcarViolencia(); // aunque erre el golpe, ya no hay final pacifista
                     System.out.println(luchador.getArmaEquipada().usar(luchador, enemigo, azar));
                     turnoUsado = true;
                 } else if (opcion == 2) {

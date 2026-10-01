@@ -38,7 +38,12 @@ public class Juego {
             return;
         }
         premiar(mantis);
-        mostrarVictoria(ronda1, ronda2);
+        // Final especial: las dos rondas ganadas sin pelear y sin haber atacado ni amenazado nunca
+        if (ronda1 == Resultado.NEGOCIADO && ronda2 == Resultado.NEGOCIADO && !luchador.usoLaViolencia()) {
+            mostrarFinalPacifista();
+        } else {
+            mostrarVictoria(ronda1, ronda2);
+        }
     }
 
     /** Después de ganar una ronda: la bolsa de plata, la experiencia y el reparto de puntos. */
@@ -334,6 +339,7 @@ public class Juego {
             }
         } else if (opcion == 4) {
             // Amenaza: con Fuerza 7, Takeshi arranca con 20 % menos de vida (una sola vez)
+            luchador.marcarViolencia(); // amenazar cuenta como violencia, le salga o no
             if (!amenazo && luchador.cumple(Atributo.FUERZA, 7)) {
                 amenazo = true;
                 sumo.intimidar();
@@ -374,6 +380,30 @@ public class Juego {
         System.out.println(luchador.getNombre() + " salió del Ring de la Fosa como campeón del torneo.");
         System.out.println("  Ronda 1, Takeshi:      " + (ronda1 == Resultado.NEGOCIADO ? "sin tirar una sola piña" : "a puro golpe"));
         System.out.println("  Ronda 2, Sor Tijereta: " + (ronda2 == Resultado.NEGOCIADO ? "la mandaste de vuelta al convento" : "a puro golpe"));
+        mostrarStats();
+        // Ganó las dos sin pelear, pero en algún momento atacó o amenazó: se le da una pista
+        if (ronda1 == Resultado.NEGOCIADO && ronda2 == Resultado.NEGOCIADO) {
+            System.out.println("\nCasi... La próxima, probá sin levantar la mano ni una sola vez.");
+        }
+    }
+
+    /** El final secreto: ganó todo con palabras, comida y canciones, sin atacar ni amenazar. */
+    private void mostrarFinalPacifista() {
+        // Sin color en el título: titulo() mide el largo del texto y los códigos de color lo agrandarían
+        Consola.titulo("F I N A L   P A C I F I S T A");
+        System.out.println(luchador.getNombre() + " ganó el Torneo Clandestino sin tirar una sola piña.");
+        System.out.println();
+        System.out.println("En la tribuna, Takeshi comparte onigiris con desconocidos y te aplaude con la boca llena.");
+        System.out.println("A su lado, Sor Tijereta reza un rosario entero por tu alma.");
+        System.out.println("El organizador revolea la bolsa de apuestas: —¿¡Un torneo entero sin sangre!? ¡Me fundiste!");
+        System.out.println("La gente baja al ring y te saca en andas cantando tu nombre.");
+        System.out.println();
+        System.out.println(Consola.color("La Fosa nunca había visto algo así: un campeón que no lastimó a nadie.", Consola.VERDE));
+        mostrarStats();
+    }
+
+    /** La línea de atributos finales, compartida por los dos finales de victoria. */
+    private void mostrarStats() {
         System.out.println("Nivel " + luchador.getNivel() + " | Fuerza " + luchador.getFuerza()
                 + " | Agilidad " + luchador.getAgilidad() + " | Carisma " + luchador.getCarisma());
     }

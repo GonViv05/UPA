@@ -287,6 +287,8 @@ Cada vez que ganás una ronda (peleando o no):
 
 Al ganar las dos rondas aparece la pantalla **V I C T O R I O S O**, que cuenta cómo ganaste cada una. Si perdés cualquiera de las dos, aparece **D E R R O T A**. En los dos casos te pregunta si querés jugar de nuevo; si decís que sí, **todo arranca de cero**.
 
+**Final secreto — F I N A L   P A C I F I S T A:** si ganás **las dos rondas sin pelear** (a Takeshi convenciéndolo o con un onigiri, a la mantis con los tres himnos) y **nunca elegiste "Atacar" ni amenazaste a Takeshi**, en vez de la pantalla normal aparece un final especial. Sobornar a Takeshi sí se permite (es plata, no violencia). Ojo: alcanza con un solo "Atacar", aunque erres el golpe, para perderlo; en ese caso la pantalla de victoria te avisa "Casi...".
+
 ### Una partida real, completa
 
 Esta es una partida del Charlatán ganando el torneo sin pelear (los números después de `>` son lo que escribió el jugador; se recortaron algunas partes con `...`):
@@ -460,7 +462,7 @@ flowchart TD
   P1 --> F2{pasillo ronda 2}
   F2 -- guardia / comerciante / jaula --> F2
   F2 -- 4: new Combate con la Mantis --> R2{Resultado}
-  R2 -- GANADO o NEGOCIADO --> P2[premiar y mostrarVictoria]
+  R2 -- GANADO o NEGOCIADO --> P2[premiar y mostrarVictoria o mostrarFinalPacifista]
   R2 -- PERDIDO --> M
   P2 --> Q{¿Jugar de nuevo?}
   M --> Q
@@ -477,7 +479,7 @@ Contado con palabras:
    3. Llama a `pasillo(1)`, que **no devuelve nada hasta que la pelea de esa ronda se resuelve**. Devuelve un `Resultado`.
    4. Si perdió, muestra la derrota y hace `return` (la partida termina). Si ganó, `premiar(sumo)`: bolsa de plata, experiencia y reparto de puntos.
    5. Lo mismo con `pasillo(2)` y la mantis.
-   6. Si ganó las dos, `mostrarVictoria(ronda1, ronda2)`.
+   6. Si ganó las dos, `mostrarFinalPacifista()` si fueron las dos `NEGOCIADO` sin atacar ni amenazar nunca; si no, `mostrarVictoria(ronda1, ronda2)`.
 3. **`pasillo(ronda)`** es un `while (true)` con el menú de 4 opciones. Las opciones 1 y 2 hacen algo y vuelven al menú. La 3 depende de la ronda: en la 1 es la charla con Takeshi (que puede terminar la ronda si lo convencés); en la 2 es mirar la jaula de la mantis. La 4 crea un `Combate` contra el rival de la ronda y devuelve lo que devuelva la pelea.
 4. **`Combate.pelear()`** es otro `while (true)` que repite turnos hasta que la pelea termina (ver la [sección 8](#8-un-turno-de-combate-paso-a-paso)).
 
@@ -642,6 +644,7 @@ El `Math.min` hace que no te cures más de lo que te falta: si te faltan 20 de v
 | `recuperarAguante()` | Suma `10 + agilidad` (usa `sumarAguante`) |
 | `sumarAguante(cantidad)` | Suma aguante sin pasar de 100 (lo usa también la arenga contra Takeshi) |
 | `probabilidadEsquivar(base)` | `base + agilidad × 5 %`, con un tope de 95 % para que nunca sea seguro |
+| `marcarViolencia()` / `usoLaViolencia()` | Bandera del final pacifista: pasa a `true` la primera vez que atacás o amenazás, y nunca vuelve a `false` |
 
 Fijate un patrón que se repite: **los métodos que pueden fallar devuelven `boolean`** (`pagar`, `usarComida`, `asignarPunto`). Así quien los llama puede escribir `if (luchador.pagar(10)) { ... } else { "No te alcanza" }`, y el objeto nunca queda en un estado inválido (por ejemplo, con plata negativa).
 
@@ -810,6 +813,8 @@ Los tres `boolean` son **banderas**: arrancan en `false` y se ponen en `true` la
 | `charlaConTakeshi()` | Menú de la reja. Devuelve `Resultado.NEGOCIADO` si ganaste hablando, o **`null`** si hay que seguir en el pasillo |
 | `subirNivel()` | Mientras queden puntos libres, pide a qué atributo sumarlo. `Atributo.values()[opcion - 1]` convierte el número 1, 2 o 3 en el atributo |
 | `mostrarVictoria(r1, r2)` / `mostrarDerrota(ganador)` | Los textos finales |
+| `mostrarFinalPacifista()` | El final secreto. `jugar()` lo elige si las dos rondas fueron `NEGOCIADO` y `!luchador.usoLaViolencia()` |
+| `mostrarStats()` | La línea de nivel y atributos, compartida por los dos finales de victoria |
 
 **Cómo elige el rival de cada ronda:** en la opción 4 del pasillo,
 
@@ -1091,6 +1096,8 @@ Y en `crearArmaInicial()` agregá su `case` si querés que empiece con un arma d
 3. En `Juego.jugar()`, creá el rival y agregá la ronda igual que la 2: `pasillo(3)`, `premiar(...)`. En `pasillo()`, elegilo en la opción 4.
 
 `Combate` tampoco hay que tocarlo: pelea contra cualquier `Enemigo`.
+
+**Cambiar qué cuenta como violencia (final pacifista)** → se marca con `luchador.marcarViolencia()`, que hoy se llama en dos lugares: en `Combate.pelear()` (opción 1, Atacar) y en `Juego.charlaConTakeshi()` (opción 4, amenazar). Para que, por ejemplo, el soborno también cuente, agregá esa misma línea en la opción 3 de `charlaConTakeshi()`. La condición del final está en `Juego.jugar()`, y el texto en `Juego.mostrarFinalPacifista()`.
 
 ---
 
